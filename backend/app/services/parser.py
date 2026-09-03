@@ -110,7 +110,14 @@ def get_client() -> anthropic.AsyncAnthropic:
         settings = get_settings()
         if not settings.anthropic_api_key:
             raise ParseError("ANTHROPIC_API_KEY is not configured")
-        _client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+        headers = {}
+        if settings.anthropic_workspace_id:
+            # Required by identity-linked keys; harmless to omit otherwise.
+            headers["anthropic-workspace-id"] = settings.anthropic_workspace_id
+        _client = anthropic.AsyncAnthropic(
+            api_key=settings.anthropic_api_key,
+            default_headers=headers or None,
+        )
     return _client
 
 

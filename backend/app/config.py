@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     database_url: str = "postgresql://postgres:postgres@localhost:5432/reminders"
 
     anthropic_api_key: str = ""
+    # Identity-linked API keys must name the workspace they act in. Org-scoped
+    # keys do not; leave this blank for those.
+    anthropic_workspace_id: str = ""
     parser_model: str = "claude-haiku-4-5"
 
     transcription_provider: str = "deepgram"
