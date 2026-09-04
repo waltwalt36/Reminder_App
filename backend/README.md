@@ -44,10 +44,20 @@ API (a fraction of a cent per run on Haiku):
 .venv/bin/python scripts/eval_parser.py "remind me to stretch in 10"
 ```
 
-It runs ~17 realistic utterances covering explicit times, relative offsets,
-parts of day, days of week, and deliberately vague requests. For the vague ones
-the check is not that Claude picks a particular time but that it reports low
-confidence rather than inventing certainty.
+It runs 20 realistic utterances covering explicit times, relative offsets,
+parts of day, days of week, and deliberately vague requests. Three kinds of case:
+
+- **Pinned-clock (5)** — the case supplies its own `now`, so there is exactly
+  one right answer regardless of when you run it. These cover the roll-forward
+  rules ("at noon" said in the afternoon means *tomorrow* noon) and a
+  DST-boundary conversion. Without pinning, these only get exercised by accident
+  depending on the hour.
+- **Ambiguous (3)** — no correct time exists for "remind me about that later".
+  The check is that Claude reports low confidence rather than inventing
+  certainty.
+- **The rest** — must parse into a future time without erroring.
+
+Last run: **20/20** on `claude-haiku-4-5`.
 
 The prompt itself is `build_system_prompt` in [app/services/parser.py](app/services/parser.py).
 

@@ -52,10 +52,20 @@ Their current local time is {now_local.strftime('%Y-%m-%dT%H:%M:%S')} ({now_loca
 
 Rules:
 - `remind_at_local` is local wall-clock time in {tz_name}, formatted YYYY-MM-DDTHH:MM:SS. Never include an offset or 'Z'.
-- The time must be in the future relative to the current local time above.
-- A bare clock time resolves to the next occurrence: "at 6:30" means today if 6:30 is still ahead, otherwise tomorrow.
-- Relative phrases resolve against the current local time: "in 20 minutes", "in an hour", "tonight".
+
+- THE TIME MUST BE IN THE FUTURE. Before you answer, compare the time you chose
+  against the current local time above. If it has already passed — even by one
+  minute — roll it forward to the next occurrence:
+    - a clock time that already passed today -> the same time tomorrow
+    - a named weekday whose time already passed today -> that weekday next week
+    - a part of day that already passed -> the next one
+  People say "at noon" in the afternoon meaning tomorrow, and name today's
+  weekday meaning next week. Roll forward; never return a past time.
+
+- Relative phrases resolve against the current local time: "in 20 minutes", "in an hour".
 - Vague parts of day: morning = 08:00, noon = 12:00, afternoon = 14:00, evening = 18:00, night = 21:00, midnight = 00:00.
+- A clock time with no AM/PM takes the reading a person most plausibly means, and then the future rule above still applies.
+- Ignore times that belong to the task's subject rather than to when the reminder should fire: in "at noon, call Dave about the 3pm meeting", the reminder is noon and 3pm is part of what to say.
 - `task` strips the framing and keeps the substance: "remind me to walk the dog" becomes "Walk the dog". Keep the user's own nouns; do not embellish or add detail they did not say.
 - Do not put the time inside `task` unless the time is part of the thing itself (e.g. "Call mom about the 3pm meeting").
 - If no time is stated at all, default to one hour from now, set `confidence` below 0.4, and say so in `ambiguity_note`.
