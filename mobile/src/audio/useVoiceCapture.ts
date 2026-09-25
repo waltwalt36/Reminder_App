@@ -6,18 +6,17 @@ import {
   useAudioRecorder,
   useAudioRecorderState,
 } from 'expo-audio';
+import { File } from 'expo-file-system';
 
 export type CaptureState = 'idle' | 'listening' | 'thinking';
 
 /**
- * Metering is dBFS: roughly -160 (silence) to 0 (clipping). Normal speech sits
- * above -40, so that is the gate between "talking" and "room tone".
- */
-/**
+ * Metering is dBFS: roughly -160 (silence) to 0 (clipping).
+ *
  * Ambient level is sampled for this long before speech detection begins. A
  * fixed absolute gate cannot work in both a quiet room (~-55 dB ambient) and a
  * moving car with music (~-25 dB) — in the car everything reads as "speech",
- * silence never arrives, and recording runs to the hard cap.
+ * silence never arrives, and recording runs until the user stops it.
  */
 const CALIBRATION_MS = 400;
 /**
@@ -32,8 +31,6 @@ const MIN_SPEECH_DB = -50;
 const MAX_SPEECH_DB = -15;
 /** Silence this long after speech ends the recording (architecture doc §6: ~1-1.5s). */
 const SILENCE_HOLD_MS = 1200;
-/** Nobody dictates a reminder for longer than this. */
-const MAX_RECORDING_MS = 15_000;
 /** If no speech at all by now, the user tapped by accident. */
 const NO_SPEECH_TIMEOUT_MS = 4_000;
 /** Metering poll interval. Fast enough to drive the pulsing ring smoothly. */
@@ -69,7 +66,7 @@ export function useVoiceCapture({ onResult, onError }: Options) {
   const speechThreshold = useRef<number | null>(null);
 
   const finish = useCallback(
-    async (reason: 'silence' | 'max' | 'no-speech' | 'manual') => {
+    async (reason: 'silence' | 'no-speech' | 'manual') => {
       if (stopping.current) return;
       stopping.current = true;
 
@@ -87,6 +84,7 @@ export function useVoiceCapture({ onResult, onError }: Options) {
       console.log('[capture] recorded uri:', uri);
 
       if (reason === 'no-speech') {
+        if (uri) { try { new File(uri).delete(); } catch {} }
         onError("Didn't hear anything — tap and speak.");
         stopping.current = false;
         return;
@@ -116,11 +114,6 @@ export function useVoiceCapture({ onResult, onError }: Options) {
     const db = recorderState.metering;
     const elapsed = now - startedAt.current;
     setLevel(toLevel(db));
-
-    if (elapsed > MAX_RECORDING_MS) {
-      void finish('max');
-      return;
-    }
 
     // Phase 1: listen to the room before judging anything as speech.
     if (elapsed < CALIBRATION_MS) {

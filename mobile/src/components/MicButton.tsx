@@ -11,9 +11,10 @@ interface Props {
   /** 0-1 mic amplitude; drives the ring while listening. */
   level: number;
   onPress: () => void;
+  interactive?: boolean;
 }
 
-export function MicButton({ state, level, onPress }: Props) {
+export function MicButton({ state, level, onPress, interactive = true }: Props) {
   const theme = useTheme();
   const ring = useRef(new Animated.Value(0)).current;
   const spin = useRef(new Animated.Value(0)).current;
@@ -46,11 +47,12 @@ export function MicButton({ state, level, onPress }: Props) {
   }, [state, spin]);
 
   const scale = ring.interpolate({ inputRange: [0, 1], outputRange: [1, 1.45] });
+  const buttonScale = ring.interpolate({ inputRange: [0, 1], outputRange: [1, 1.16] });
   const opacity = ring.interpolate({ inputRange: [0, 1], outputRange: [0.15, 0.45] });
   const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
   const label =
-    state === 'listening' ? 'Listening…' : state === 'thinking' ? 'Working…' : 'Tap to speak';
+    state === 'listening' ? 'Listening…' : state === 'thinking' ? 'Working…' : 'Tap to start';
 
   return (
     <View style={styles.wrap}>
@@ -76,31 +78,39 @@ export function MicButton({ state, level, onPress }: Props) {
 
         <Pressable
           onPress={onPress}
-          disabled={state === 'thinking'}
-          accessibilityRole="button"
+          disabled={!interactive || state === 'thinking'}
+          accessibilityRole={interactive ? 'button' : undefined}
           accessibilityLabel={
-            state === 'listening' ? 'Stop recording' : 'Record a reminder'
+            interactive ? (state === 'listening' ? 'Stop recording' : 'Record a connection note') : undefined
           }
-          style={({ pressed }) => [
-            styles.button,
-            {
-              backgroundColor: state === 'listening' ? theme.accent : theme.card,
-              borderColor: state === 'listening' ? theme.accent : theme.border,
-              transform: [{ scale: pressed ? 0.96 : 1 }],
-            },
-          ]}
         >
-          <Text style={styles.glyph}>{state === 'listening' ? '■' : '🎙'}</Text>
+          <Animated.View
+            style={[
+              styles.button,
+              {
+                backgroundColor: state === 'listening' ? theme.accent : theme.accentSoft,
+                borderColor: state === 'listening' ? theme.accent : theme.accentSoft,
+                transform: [{ scale: buttonScale }],
+              },
+            ]}
+          >
+            {state === 'listening' ? <View style={[styles.stopMark, { backgroundColor: theme.card }]} /> : <View style={styles.micIcon}>
+              <View style={[styles.micHead, { backgroundColor: theme.accent }]} />
+              <View style={[styles.micArc, { borderColor: theme.accent }]} />
+              <View style={[styles.micStem, { backgroundColor: theme.accent }]} />
+              <View style={[styles.micFoot, { backgroundColor: theme.accent }]} />
+            </View>}
+          </Animated.View>
         </Pressable>
       </View>
 
-      <Text style={[styles.label, { color: theme.muted }]}>{label}</Text>
+      {(interactive || state !== 'idle') && <Text style={[styles.label, { color: theme.muted }]}>{label}</Text>}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: 'center', gap: 20 },
+  wrap: { alignItems: 'center', gap: 10 },
   stack: { width: SIZE * 1.6, height: SIZE * 1.6, alignItems: 'center', justifyContent: 'center' },
   halo: { position: 'absolute', width: SIZE, height: SIZE, borderRadius: SIZE / 2 },
   spinner: {
@@ -111,18 +121,23 @@ const styles = StyleSheet.create({
     borderWidth: 3,
   },
   button: {
-    width: SIZE,
-    height: SIZE,
+    width: 150,
+    height: 150,
     borderRadius: SIZE / 2,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 4,
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 1,
   },
-  glyph: { fontSize: 44 },
+  micIcon: { width: 40, height: 48, alignItems: 'center' },
+  micHead: { position: 'absolute', top: 2, width: 14, height: 24, borderRadius: 7 },
+  micArc: { position: 'absolute', top: 10, width: 30, height: 21, borderWidth: 2, borderTopWidth: 0, borderBottomLeftRadius: 15, borderBottomRightRadius: 15 },
+  micStem: { position: 'absolute', top: 30, width: 2, height: 9, borderRadius: 1 },
+  micFoot: { position: 'absolute', top: 39, width: 16, height: 2, borderRadius: 1 },
+  stopMark: { width: 18, height: 18, borderRadius: 3 },
   label: { fontSize: 15, fontWeight: '500' },
 });

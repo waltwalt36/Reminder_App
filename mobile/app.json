@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Reminders",
-    "slug": "voice-reminders",
+    "name": "Thread",
+    "slug": "connection-notes",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -34,10 +34,11 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "Reminders uses the microphone so you can speak a reminder instead of typing it."
+          "microphonePermission": "Connection Notes uses the microphone so you can capture a conversation note by voice."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      "expo-secure-store"
     ]
   }
 }

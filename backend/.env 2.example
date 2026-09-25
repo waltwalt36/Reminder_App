@@ -1,0 +1,25 @@
+# --- Database ---
+# Railway injects DATABASE_URL automatically when you attach a Postgres plugin.
+# Locally, point at your own Postgres. The app rewrites postgresql:// -> postgresql+asyncpg://
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/reminders
+
+# --- Claude (reminder parsing) ---
+ANTHROPIC_API_KEY=sk-ant-...
+# Only needed for identity-linked keys (the API returns a 400 naming this header
+# if yours requires it). Find it in the Console URL: /workspaces/<id>/...
+ANTHROPIC_WORKSPACE_ID=
+# Haiku 4.5 is cheap and fast; swap to claude-sonnet-5 if parsing accuracy needs a bump.
+PARSER_MODEL=claude-haiku-4-5
+
+# --- Transcription ---
+# One of: deepgram | groq | openai | stub
+TRANSCRIPTION_PROVIDER=deepgram
+DEEPGRAM_API_KEY=
+GROQ_API_KEY=
+OPENAI_API_KEY=
+
+# --- App ---
+# Comma-separated. "*" is fine for v1 since there is no auth and no cookies.
+CORS_ORIGINS=*
+DEFAULT_SNOOZE_MINUTES=5
+LOG_LEVEL=INFO

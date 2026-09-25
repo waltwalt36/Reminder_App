@@ -24,6 +24,8 @@ class DeepgramTranscriber(Transcriber):
             "smart_format": "true",
             "punctuate": "true",
             "language": "en-US",
+            # Disable content retention for Deepgram's model-improvement program.
+            "mip_opt_out": "true",
             # Nova-3 keyterm boosting: raises recall on the time words that
             # carry all the meaning in a reminder.
             "keyterm": VOCABULARY_HINT,
